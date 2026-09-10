@@ -1,135 +1,106 @@
-# Yasir Hassan
+# Hi, I'm Yasir Hassan 👋
 
-### AI Automation Developer | 3rd Year MBBS Student
+### AI Automation Developer | MBBS Student | AI Builder
 
-I build AI systems that solve real business problems.
+I build AI systems, automation workflows, and practical software solutions for real world problems.
 
-My work sits at the intersection of **Artificial Intelligence, Automation, Healthcare, and Software Development**. I design AI agents, chatbots, automation workflows, backend systems, and API integrations that turn repetitive processes into practical systems.
+I'm currently studying **MBBS** while developing skills in **AI automation, AI agents, chatbots, backend systems, APIs, and workflow automation**.
 
-Currently studying **MBBS** while building production focused AI automation projects.
-
----
-
-## What I Build
-
-• AI Agents
-• AI Chatbots
-• Workflow Automation
-• n8n Automations
-• API Integrations
-• Backend Systems
-• AI Customer Support Systems
-• AI SDR Systems
-• Healthcare AI Solutions
-• Business Process Automation
+My long term goal is to work at the intersection of **Healthcare × AI × Automation**.
 
 ---
 
-## Tech Stack
+## 🧠 What I Do
 
-### AI
-
-OpenAI
-Claude
-Gemini
-OpenRouter
-Ollama
-LLM APIs
-RAG
-
-### Automation
-
-n8n
-Webhooks
-REST APIs
-API Integrations
-Workflow Automation
-
-### Backend
-
-Python
-FastAPI
-PostgreSQL
-REST APIs
-pgvector
-
-### Frontend
-
-Next.js
-React
-JavaScript
-HTML
-CSS
-
-### Databases
-
-PostgreSQL
-Supabase
-Neon
-Qdrant
-
-### Tools
-
-Git
-GitHub
-Docker
-Postman
-Cloudflare
+🤖 Build AI Agents
+💬 Build AI Chatbots
+⚙️ Design n8n Automation Workflows
+🔗 Integrate APIs and Business Tools
+🧩 Build Backend Systems
+🏥 Explore Healthcare AI
+📊 Automate Repetitive Business Processes
+🛠️ Turn ideas into working AI systems
 
 ---
 
-## Featured Projects
+## 🚀 Featured Projects
 
 ### 🤖 AI SDR Automation
 
-An automated AI sales development system that processes new leads, analyzes company information, generates personalized outreach, and connects different business tools through automated workflows.
+An AI powered sales development workflow that processes new leads, analyzes information, generates personalized responses, and automates parts of the sales process.
 
-**Built with:** n8n, AI APIs, Webhooks, REST APIs
+**Tech:** n8n • AI APIs • Webhooks • REST APIs
 
 ---
 
 ### 💬 AI Customer Support Resolution Engine
 
-An AI powered customer support system designed to classify customer issues, retrieve relevant knowledge, generate responses, and route uncertain cases to human agents.
+An AI customer support system designed to understand customer issues, retrieve relevant information, generate responses, and send uncertain cases to human agents.
 
-**Built with:** Next.js, FastAPI, PostgreSQL, pgvector, Ollama, Qdrant, n8n
+**Tech:** Next.js • FastAPI • PostgreSQL • pgvector • Ollama • Qdrant • n8n
 
 ---
 
 ### 💰 AI Finance Operations Agent
 
-An AI automation system for processing invoices, receipts, vendor emails, purchase orders, payments, and approval workflows.
+An AI automation system designed to process invoices, receipts, vendor information, purchase orders, payment information, and approval workflows.
 
-The system focuses on reducing manual finance operations while maintaining validation and audit trails.
-
-**Built with:** AI Agents, OCR, n8n, APIs, PostgreSQL
+**Tech:** AI Agents • OCR • n8n • APIs • PostgreSQL
 
 ---
 
-## 🏥 Healthcare + AI
+## 🛠️ Tech Stack
 
-As a medical student, I'm particularly interested in building AI systems that can improve healthcare workflows.
+### Artificial Intelligence
 
-My focus is not replacing doctors.
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge\&logo=openai\&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge\&logo=google\&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-black?style=for-the-badge)
 
-The goal is to use AI for:
+### Automation
 
-• Administrative automation
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge\&logo=n8n\&logoColor=white)
+![REST API](https://img.shields.io/badge/REST_API-02569B?style=for-the-badge)
+
+### Development
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge\&logo=fastapi\&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge\&logo=next.js\&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)
+
+### Databases & Infrastructure
+
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge\&logo=postgresql\&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge\&logo=docker\&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge\&logo=git\&logoColor=white)
+
+---
+
+## 🏥 Healthcare × AI
+
+Being a medical student gives me a different perspective when building technology.
+
+I'm interested in AI systems that can help healthcare professionals with:
+
+• Administrative work
 • Patient information organization
-• Routine question handling
+• Routine questions
 • Appointment workflows
-• Clinical documentation support
-• Patient engagement between visits
+• Documentation
+• Patient engagement
 • Healthcare operations
 
-This gives healthcare professionals more time to focus on patients.
+The goal is simple:
+
+**Use technology to reduce repetitive work and give healthcare professionals more time for patients.**
 
 ---
 
-## Currently Learning
+## 📚 Currently Learning
 
 • Advanced AI Agents
-• RAG Systems
+• Retrieval Augmented Generation
 • LLM Application Development
 • AI Automation Architecture
 • Backend Development
@@ -139,22 +110,36 @@ This gives healthcare professionals more time to focus on patients.
 
 ---
 
-## My Approach
+## ⚡ How I Build
 
-I don't build AI just because AI is popular.
+I start with the problem.
 
-I start with a problem, understand the workflow, identify what can be automated, then build the system around that process.
+Then I understand the workflow, identify repetitive tasks, decide where AI actually helps, and build the automation around it.
 
 **Problem → Workflow → Automation → AI → Production**
 
 ---
 
-## Connect With Me
+## 📊 GitHub Stats
+
+![Yasir's GitHub stats](https://github-readme-stats.vercel.app/api?username=yasirhassan970-coder\&show_icons=true\&theme=tokyonight\&hide_border=true)
+
+![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=yasirhassan970-coder\&layout=compact\&theme=tokyonight\&hide_border=true)
+
+---
+
+## 🤝 Let's Connect
 
 📧 **Email:** [yasirhassan4113@gmail.com](mailto:yasirhassan4113@gmail.com)
 
-💼 **LinkedIn:** [linkedin.com/in/yasir-hassan-8aa858299](https://www.linkedin.com/in/yasir-hassan-8aa858299)
+💼 **LinkedIn:**
+https://www.linkedin.com/in/yasir-hassan-8aa858299
+
+🐙 **GitHub:**
+https://github.com/yasirhassan970-coder
 
 ---
 
 ### Healthcare × AI × Automation
+
+**Building systems, learning medicine, and solving real problems.**
