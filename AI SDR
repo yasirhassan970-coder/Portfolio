@@ -1,0 +1,204 @@
+# AI SDR Automation with n8n
+
+> An AI-powered sales development workflow that researches leads, evaluates opportunities, and prepares personalized outreach.
+
+## Overview
+
+This project demonstrates an automated AI SDR workflow built with **n8n**.
+
+The system receives a new lead through a webhook, validates the information, analyzes the company, evaluates the lead and generates personalized outreach.
+
+The goal is to reduce repetitive sales research and preparation.
+
+## Architecture
+
+```text
+Lead
+  ↓
+Webhook
+  ↓
+Input Validation
+  ↓
+Company Research
+  ↓
+AI Analysis
+  ↓
+Lead Scoring
+  ↓
+Personalized Outreach
+  ↓
+CRM / Database
+  ↓
+Email
+```
+
+## Features
+
+• Webhook-based lead intake
+
+• Lead data validation
+
+• Company research
+
+• AI-based lead analysis
+
+• Lead scoring
+
+• Pain point identification
+
+• Personalized outreach generation
+
+• Structured output
+
+• CRM or database storage
+
+• Email automation
+
+## Example Input
+
+```json
+{
+  "company_name": "Example Dental Clinic",
+  "website": "https://example.com",
+  "contact_name": "John Smith",
+  "contact_email": "john@example.com",
+  "industry": "Dental",
+  "campaign_id": "dental-001"
+}
+```
+
+## Example AI Output
+
+```json
+{
+  "lead_score": 87,
+  "industry": "Dental",
+  "company_summary": "Dental clinic providing general and cosmetic services.",
+  "pain_points": [
+    "No automated website chat",
+    "Potentially slow response to enquiries"
+  ],
+  "automation_opportunity": "Website AI chatbot",
+  "outreach_ready": true
+}
+```
+
+## Workflow
+
+### 1. Webhook
+
+The workflow starts when a new lead is submitted.
+
+### 2. Validation
+
+Required fields are checked before processing.
+
+### 3. Research
+
+The system gathers available company information.
+
+### 4. AI Analysis
+
+An LLM analyzes the available information and identifies possible business needs.
+
+### 5. Lead Scoring
+
+The lead receives a structured score based on predefined criteria.
+
+### 6. Outreach Generation
+
+The AI creates a personalized outreach message using the lead information and identified opportunity.
+
+### 7. Storage
+
+The lead and generated information can be stored in a CRM or database.
+
+### 8. Email
+
+The generated message can be passed to an email provider for outreach.
+
+## Tech Stack
+
+• n8n
+
+• Webhooks
+
+• REST APIs
+
+• OpenAI / compatible LLM API
+
+• PostgreSQL or CRM
+
+• Email API
+
+## Environment Variables
+
+Create a `.env` file using `.env.example`.
+
+Never commit API keys or credentials to GitHub.
+
+## Example Environment
+
+```env
+OPENAI_API_KEY=
+DATABASE_URL=
+EMAIL_API_KEY=
+```
+
+## Running the Workflow
+
+1. Import `workflow.json` into n8n.
+
+2. Configure the required credentials.
+
+3. Add the required API keys.
+
+4. Configure the webhook.
+
+5. Send a test lead.
+
+6. Inspect each execution.
+
+7. Configure the final CRM and email steps.
+
+## Screenshots
+
+### Workflow
+
+Add a screenshot of the complete n8n workflow here.
+
+### Execution
+
+Add a successful execution screenshot here.
+
+### Output
+
+Add an example of the structured AI output here.
+
+## Security
+
+No API keys, passwords, or private credentials are included in this repository.
+
+Use `.env.example` for documenting required configuration.
+
+## Future Improvements
+
+• Automatic CRM enrichment
+
+• Email reply classification
+
+• Automated follow-ups
+
+• Lead response tracking
+
+• Human approval before sending
+
+• Campaign analytics
+
+• Multi-agent research
+
+## Disclaimer
+
+This project is intended as a technical demonstration of AI powered workflow automation.
+
+Use appropriate validation, human review and provider policies before deploying automated outreach in production.
