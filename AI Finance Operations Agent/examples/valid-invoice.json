@@ -1,0 +1,22 @@
+{
+  "invoice_number": "INV-1001",
+  "invoice_date": "2026-09-01",
+  "due_date": "2026-09-30",
+  "vendor_name": "Karachi Office Supplies",
+  "vendor_tax_id": "PK-NTN-DEMO-1234567",
+  "currency": "PKR",
+  "subtotal": 40000,
+  "tax": 7200,
+  "total": 47200,
+  "purchase_order_number": "PO-2026-001",
+  "line_items": [
+    {
+      "description": "Office supplies",
+      "quantity": 1,
+      "unit_price": 40000,
+      "total": 40000
+    }
+  ],
+  "payment_terms": "Net 30",
+  "confidence": 0.96
+}
