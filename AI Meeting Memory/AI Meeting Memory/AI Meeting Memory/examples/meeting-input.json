@@ -1,9 +1,0 @@
-{
-  "meeting_id": "meeting_001",
-  "title": "Project Planning Meeting",
-  "transcript": "Discussed the new automation project. Yasir will prepare the technical architecture by Friday. Ahmed will review the API requirements. The team agreed to meet again next week.",
-  "participants": [
-    "Yasir",
-    "Ahmed"
-  ]
-}
