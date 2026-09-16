@@ -1,1 +1,786 @@
-
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "finance/invoice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "65bd3776-e9a5-4344-8ce3-155f20ab719e",
+      "name": "Invoice Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        352
+      ],
+      "webhookId": "finance-invoice-intake-v1"
+    },
+    {
+      "parameters": {},
+      "id": "2dae0687-0cdc-4a32-8797-41f23f67de46",
+      "name": "Manual Demo Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const testCases = {\n  valid: {\n    invoice_number: 'INV-1001',\n    invoice_date: '2026-09-01',\n    due_date: '2026-09-30',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 40000,\n    tax: 7200,\n    total: 47200,\n    purchase_order_number: 'PO-2026-001',\n    line_items: [\n      {\n        description: 'Office supplies',\n        quantity: 1,\n        unit_price: 40000,\n        total: 40000\n      }\n    ],\n    payment_terms: 'Net 30',\n    bank_account: 'PK00DEMO0000000012345678',\n    confidence: 0.96\n  },\n\n  duplicate: {\n    invoice_number: 'INV-DUP-001',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: 1800,\n    total: 11800,\n    confidence: 0.95\n  },\n\n  missing_tax: {\n    invoice_number: 'INV-1002',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: null,\n    total: 10000,\n    confidence: 0.95\n  },\n\n  wrong_total: {\n    invoice_number: 'INV-1003',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: 1800,\n    total: 10000,\n    confidence: 0.95\n  },\n\n  unknown_vendor: {\n    invoice_number: 'INV-1004',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Unknown Demo Vendor',\n    vendor_tax_id: 'PK-NTN-9999999',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: 1800,\n    total: 11800,\n    confidence: 0.95\n  },\n\n  high_value: {\n    invoice_number: 'INV-1005',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 300000,\n    tax: 54000,\n    total: 354000,\n    confidence: 0.97\n  },\n\n  low_confidence: {\n    invoice_number: 'INV-1006',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: 1800,\n    total: 11800,\n    confidence: 0.62\n  },\n\n  already_paid: {\n    invoice_number: 'INV-PAID-001',\n    invoice_date: '2026-09-01',\n    vendor_name: 'Karachi Office Supplies',\n    vendor_tax_id: 'PK-NTN-1234567',\n    currency: 'PKR',\n    subtotal: 10000,\n    tax: 1800,\n    total: 11800,\n    confidence: 0.96\n  }\n};\n\nconst demo_case = $json.demo_case || 'valid';\nconst extraction = testCases[demo_case] || testCases.valid;\n\nreturn [\n  {\n    json: {\n      source: 'manual_demo',\n      demo_case,\n      file_name: `${demo_case}.json`,\n      mime_type: 'application/json',\n      document_text: JSON.stringify(extraction),\n      extraction_override: extraction,\n      document_hash: `demo-${demo_case}-v1`\n    }\n  }\n];"
+      },
+      "id": "8a452fcd-c434-4245-a561-0df6cf0bb4d9",
+      "name": "Create Demo Finance Document",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst binary = $binary?.data;\n\nconst documentText = body.document_text || body.text || '';\nconst supplied = body.extraction || body.extraction_override || null;\n\nconst fileName = body.file_name || binary?.fileName || 'invoice-upload';\nconst mimeType = body.mime_type || binary?.mimeType || 'application/octet-stream';\n\nconst hashSource =\n  body.document_hash ||\n  `${fileName}|${documentText}|${JSON.stringify(supplied || '')}`;\n\nlet hash = 0;\n\nfor (let i = 0; i < hashSource.length; i++) {\n  hash = ((hash << 5) - hash) + hashSource.charCodeAt(i) | 0;\n}\n\nreturn [\n  {\n    json: {\n      source: $json.source || 'webhook',\n      demo_case: body.demo_case || null,\n      file_name: fileName,\n      mime_type: mimeType,\n      document_text: documentText,\n      extraction_override: supplied,\n      document_hash: body.document_hash || `local-${Math.abs(hash)}`,\n      received_at: new Date().toISOString(),\n      audit_events: [\n        {\n          event_type: 'DOCUMENT_RECEIVED',\n          actor: 'finance-intake',\n          details: {\n            file_name: fileName,\n            mime_type: mimeType\n          }\n        }\n      ]\n    },\n    binary: $binary\n  }\n];"
+      },
+      "id": "368284eb-41e1-4e88-935c-50934456c179",
+      "name": "Normalize and Validate File Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8304e90f-b0d5-440a-a424-dcec20271705",
+              "leftValue": "={{ ['application/pdf','image/png','image/jpeg','image/jpg','application/json','text/plain'].includes($json.mime_type) || !!$json.document_text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3bf8057d-82d2-4baf-80dd-637e009a0280",
+      "name": "Supported Finance Document?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst extraction = data.extraction_override;\n\nconst prompt = {\n  model: 'llama3.1',\n  stream: false,\n  format: 'json',\n  prompt: `You are a finance document extraction assistant.\n\nExtract ONLY JSON with this exact schema:\n\ninvoice_number,\ninvoice_date,\ndue_date,\nvendor_name,\nvendor_tax_id,\ncurrency,\nsubtotal,\ntax,\ntotal,\npurchase_order_number,\nline_items,\npayment_terms,\nbank_account,\nconfidence.\n\nDo not make approval decisions.\nIf a field is unknown, use null.\n\nFinance document text:\n${data.document_text}`\n};\n\nreturn [\n  {\n    json: {\n      ...data,\n      ollama_request: prompt,\n      extraction_override: extraction\n    }\n  }\n];"
+      },
+      "id": "37dfbd89-5b53-47ff-a231-924503148d35",
+      "name": "Prepare Controlled AI Extraction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434/api/generate' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ollama_request) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 45000
+        }
+      },
+      "id": "2d437f12-c9cb-4a90-85fe-9a6674e0c00a",
+      "name": "Local AI Invoice Extraction (Ollama)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        944,
+        224
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const x = $json;\nlet extracted = x.extraction_override;\nif (!extracted) {\n  try {\n    const raw = x.response || x.body?.response || x.data?.response || x.response?.body?.response;\n    extracted = typeof raw === 'string' ? JSON.parse(raw) : raw;\n  } catch (e) {}\n}\nif (!extracted || typeof extracted !== 'object') {\n  return [{ json: { ...x, extraction_error: 'AI/OCR extraction unavailable or invalid JSON', action: 'exception', exception_reason: 'OCR_OR_AI_EXTRACTION_FAILURE', audit_events: [...(x.audit_events || []), { event_type: 'EXCEPTION_CREATED', actor: 'extraction-service', details: { reason: 'OCR_OR_AI_EXTRACTION_FAILURE' } }] } }];\n}\nreturn [{ json: { ...x, invoice: extracted, audit_events: [...(x.audit_events || []), { event_type: 'OCR_COMPLETED', actor: 'local-ocr-or-text-input', details: { text_available: !!x.document_text } }, { event_type: 'AI_EXTRACTION_COMPLETED', actor: 'local-ollama', details: { confidence: extracted.confidence ?? null } }] } }];"
+      },
+      "id": "bb522e9f-a09a-465a-b32c-eb56a2e21d9d",
+      "name": "Parse AI Extraction with Safe Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT v.vendor_id, v.vendor_name, v.tax_id, v.email, v.bank_account, v.status, v.approval_limit, $1::jsonb AS finance_payload,\nCASE WHEN v.vendor_id IS NULL THEN 'not_matched' ELSE 'matched' END AS vendor_match_status\nFROM (SELECT 1) s\nLEFT JOIN LATERAL (\n  SELECT * FROM vendors\n  WHERE tax_id = ($1::jsonb->'invoice'->>'vendor_tax_id')\n     OR lower(vendor_name) = lower($1::jsonb->'invoice'->>'vendor_name')\n     OR bank_account = ($1::jsonb->'invoice'->>'bank_account')\n  ORDER BY CASE WHEN tax_id = ($1::jsonb->'invoice'->>'vendor_tax_id') THEN 1 ELSE 2 END\n  LIMIT 1\n) v ON TRUE;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "19911930-f88b-48a7-916a-0aa891f04fd6",
+      "name": "Controlled Tool - Lookup Vendor",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1424,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json.finance_payload;\nreturn [{ json: { ...p, vendor: { vendor_id: $json.vendor_id, vendor_name: $json.vendor_name, tax_id: $json.tax_id, status: $json.status, approval_limit: $json.approval_limit }, vendor_match_status: $json.vendor_match_status, audit_events: [...(p.audit_events || []), { event_type: 'VENDOR_MATCHED', actor: 'controlled-vendor-lookup', details: { result: $json.vendor_match_status, vendor_id: $json.vendor_id || null } }] } }];"
+      },
+      "id": "07fb0248-9808-4424-bfc9-b6a364a2c4b9",
+      "name": "Restore Vendor Lookup Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT $1::jsonb AS finance_payload,\nEXISTS(SELECT 1 FROM invoices i WHERE i.document_hash = ($1::jsonb->>'document_hash'))\nOR EXISTS(SELECT 1 FROM invoices i WHERE i.invoice_number = ($1::jsonb->'invoice'->>'invoice_number') AND i.total = NULLIF($1::jsonb->'invoice'->>'total','')::numeric)\nOR EXISTS(SELECT 1 FROM invoices i WHERE i.vendor_id = NULLIF($1::jsonb->'vendor'->>'vendor_id','')::uuid AND i.invoice_number = ($1::jsonb->'invoice'->>'invoice_number')) AS duplicate,\nCOALESCE((SELECT payment_status FROM invoices i WHERE i.invoice_number = ($1::jsonb->'invoice'->>'invoice_number') ORDER BY updated_at DESC LIMIT 1),'pending') AS existing_payment_status;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "852a8763-6440-4d16-b435-60bb7a49d9e0",
+      "name": "Controlled Tool - Find Duplicate",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1904,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json.finance_payload;\nconst i = p.invoice || {};\nconst n = v => Number(v);\nconst subtotal = n(i.subtotal), tax = n(i.tax), total = n(i.total);\nconst tolerance = Number($env.FINANCE_ROUNDING_TOLERANCE || 2);\nconst pakistanTaxRate = Number($env.PAKISTAN_DEMO_TAX_RATE || 0.18);\nconst expectedTax = Number.isFinite(subtotal) ? +(subtotal * pakistanTaxRate).toFixed(2) : null;\nconst taxDifference = Number.isFinite(tax) && expectedTax !== null ? +Math.abs(tax - expectedTax).toFixed(2) : null;\nconst errors = [];\nif (!i.invoice_number) errors.push('MISSING_INVOICE_NUMBER');\nif (!i.invoice_date || Number.isNaN(Date.parse(i.invoice_date))) errors.push('INVALID_INVOICE_DATE');\nif (!i.currency || !/^[A-Z]{3}$/.test(i.currency)) errors.push('INVALID_CURRENCY');\nif (![subtotal, tax, total].every(Number.isFinite)) errors.push('NON_NUMERIC_FINANCIAL_FIELD');\nif (Number.isFinite(subtotal) && Number.isFinite(tax) && Number.isFinite(total) && Math.abs((subtotal + tax) - total) > tolerance) errors.push('TOTAL_MISMATCH');\nif (p.vendor_match_status !== 'matched') errors.push('UNKNOWN_VENDOR');\nif (p.vendor?.status && p.vendor.status !== 'active') errors.push('INACTIVE_VENDOR');\nif ($json.duplicate) errors.push('DUPLICATE_INVOICE');\nif ($json.existing_payment_status === 'paid' || p.demo_case === 'already_paid') errors.push('ALREADY_PAID');\nif (i.vendor_tax_id == null) errors.push('MISSING_TAX_ID');\nif (taxDifference !== null && taxDifference > tolerance) errors.push('TAX_MISMATCH');\nif (Number(i.confidence || 0) < 0.75) errors.push('LOW_AI_CONFIDENCE');\nlet action = 'auto_process';\nlet approval_status = 'not_required';\nlet status = 'validated';\nif (errors.includes('DUPLICATE_INVOICE') || errors.includes('ALREADY_PAID')) { action = 'exception'; status = 'exception'; }\nelse if (errors.length) { action = 'human_review'; approval_status = 'pending'; status = 'review_required'; }\nelse if (total > 250000) { action = 'human_review'; approval_status = 'pending_finance'; status = 'approval_required'; }\nelse if (total > 50000) { action = 'human_review'; approval_status = 'pending_manager'; status = 'approval_required'; }\nconst decision = { action, status, approval_status, validation_status: errors.length ? 'failed' : 'passed', errors, tax: { expected_tax: expectedTax, provided_tax: tax, tax_difference: taxDifference, tolerance, configured_rate: pakistanTaxRate }, duplicate: !!$json.duplicate, existing_payment_status: $json.existing_payment_status, recommended_decision: action === 'auto_process' ? 'approve_and_post' : action === 'exception' ? 'reject_exception' : 'request_human_approval' };\nreturn [{ json: { ...p, duplicate: !!$json.duplicate, existing_payment_status: $json.existing_payment_status, decision, audit_events: [...(p.audit_events || []), { event_type: 'DUPLICATE_CHECK_COMPLETED', actor: 'controlled-duplicate-lookup', details: { duplicate: !!$json.duplicate } }, { event_type: 'VALIDATION_COMPLETED', actor: 'deterministic-validation-engine', details: decision }] } }];"
+      },
+      "id": "cdde205a-b113-4037-88ae-500f4902badd",
+      "name": "Deterministic Validation and Approval Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "42aeb52f-850c-4510-9d13-ee74cac93b14",
+              "leftValue": "={{ $json.decision.action }}",
+              "rightValue": "auto_process",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "11a62898-d8a9-4aab-8869-e0ad9a6a05af",
+      "name": "Eligible for Auto Processing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2384,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (SELECT $1::jsonb x), saved AS (\nINSERT INTO invoices (invoice_number,vendor_id,invoice_date,due_date,currency,subtotal,tax,total,purchase_order_number,status,validation_status,approval_status,payment_status,duplicate_flag,document_hash,confidence,raw_extraction,created_at,updated_at)\nSELECT x->'invoice'->>'invoice_number', NULLIF(x->'vendor'->>'vendor_id','')::uuid, NULLIF(x->'invoice'->>'invoice_date','')::date, NULLIF(x->'invoice'->>'due_date','')::date, x->'invoice'->>'currency', NULLIF(x->'invoice'->>'subtotal','')::numeric, NULLIF(x->'invoice'->>'tax','')::numeric, NULLIF(x->'invoice'->>'total','')::numeric, x->'invoice'->>'purchase_order_number', x->'decision'->>'status', x->'decision'->>'validation_status', x->'decision'->>'approval_status', CASE WHEN x->'decision'->>'action' = 'auto_process' THEN 'approved' ELSE 'pending' END, COALESCE((x->>'duplicate')::boolean,false), x->>'document_hash', NULLIF(x->'invoice'->>'confidence','')::numeric, x->'invoice', now(), now() FROM p\nON CONFLICT (document_hash) DO UPDATE SET updated_at=now()\nRETURNING * )\nSELECT saved.id AS invoice_id, saved.invoice_number, saved.status, saved.approval_status, saved.payment_status, p.x AS finance_payload FROM saved,p;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "dc4426d5-0c54-4452-a85a-b167bde53daa",
+      "name": "Persist Invoice Idempotently",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2624,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json.finance_payload;\n\nreturn [\n  {\n    json: {\n      ...p,\n      invoice_id: $json.invoice_id,\n      persisted_status: $json.status,\n      audit_events: [\n        ...(p.audit_events || []),\n        {\n          event_type:\n            p.decision.action === 'auto_process'\n              ? 'APPROVED'\n              : p.decision.action === 'exception'\n                ? 'EXCEPTION_CREATED'\n                : 'APPROVAL_REQUIRED',\n          actor: 'finance-operations-agent',\n          details: {\n            invoice_id: $json.invoice_id,\n            decision: p.decision.action\n          }\n        }\n      ]\n    }\n  }\n];"
+      },
+      "id": "629a40eb-0f67-4b44-8e39-9e0df2fff31f",
+      "name": "Attach Persisted Invoice ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/mock/accounting/invoice",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({invoice_id:$json.invoice_id,invoice_number:$json.invoice.invoice_number,vendor:$json.invoice.vendor_name,total:$json.invoice.total,currency:$json.invoice.currency,idempotency_key:$json.document_hash}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "dbe7e7fd-348c-496c-9a3e-bf891a2a28fb",
+      "name": "Post to Local Mock Accounting API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3104,
+        112
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\nconst base = input.finance_payload || input;\nconst accounting = input.accounting_transaction_id ? input : (input.body || {});\nconst posted = accounting.status === 'posted' || accounting.status === 'success';\nreturn [{ json: { ...base, invoice_id: base.invoice_id || input.invoice_id, final_status: posted ? 'processed' : 'accounting_failed', accounting_transaction_id: accounting.accounting_transaction_id || null, payment_status: posted ? 'scheduled' : 'failed', audit_events: [...(base.audit_events || []), { event_type: posted ? 'ACCOUNTING_POSTED' : 'EXCEPTION_CREATED', actor: 'mock-accounting-api', details: { accounting_transaction_id: accounting.accounting_transaction_id || null, status: accounting.status || 'failed' } }, ...(posted ? [{ event_type: 'PAYMENT_CREATED', actor: 'finance-operations-agent', details: { status: 'scheduled' } }] : [])] } }];"
+      },
+      "id": "c410a4f4-7c75-4b44-86b6-ed1d7d24f9be",
+      "name": "Handle Accounting Result Safely",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (SELECT $1::jsonb x), upd AS (\nUPDATE invoices SET status=p.x->>'final_status', payment_status=p.x->>'payment_status', updated_at=now() FROM p WHERE id=(p.x->>'invoice_id')::uuid RETURNING invoices.id\n), pay AS (\nINSERT INTO payments (invoice_id,status,accounting_transaction_id,created_at,updated_at)\nSELECT (p.x->>'invoice_id')::uuid,p.x->>'payment_status',p.x->>'accounting_transaction_id',now(),now() FROM p WHERE p.x->>'payment_status' IN ('scheduled','paid') ON CONFLICT (invoice_id) DO UPDATE SET status=EXCLUDED.status,accounting_transaction_id=EXCLUDED.accounting_transaction_id,updated_at=now()\n) SELECT p.x AS finance_payload FROM p;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "6d7a0ff0-269e-4392-a1fe-62039d586a99",
+      "name": "Update Payment and Invoice Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3584,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO audit_logs (invoice_id,event_type,actor,details,timestamp)\nSELECT NULLIF($1::jsonb->>'invoice_id','')::uuid, event->>'event_type', event->>'actor', event->'details', now()\nFROM jsonb_array_elements(COALESCE($1::jsonb->'audit_events','[]'::jsonb)) event;\nSELECT $1::jsonb AS finance_payload;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "6127cfc4-7e19-4cbd-8994-e156f7f28e76",
+      "name": "Write Immutable Audit Log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3872,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {status: $json.finance_payload.final_status || $json.finance_payload.decision?.status, invoice_id: $json.finance_payload.invoice_id || null, invoice_number: $json.finance_payload.invoice?.invoice_number || null, decision: $json.finance_payload.decision || null, accounting_transaction_id: $json.finance_payload.accounting_transaction_id || null} }}",
+        "options": {}
+      },
+      "id": "c83faf3f-d59b-48a7-9d0c-997d2ab838c0",
+      "name": "Return Invoice Processing Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4064,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "finance/approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8cd709eb-4982-4caf-baa1-d6eb88ed4955",
+      "name": "Human Approval Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2608,
+        624
+      ],
+      "webhookId": "finance-approval-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body || $json;\nconst decision = String(b.decision || '').toLowerCase();\nif (!b.invoice_id || !['approve','reject'].includes(decision)) throw new Error('invoice_id and decision=approve|reject are required');\nreturn [{ json: { invoice_id: b.invoice_id, approval_decision: decision, approver: b.approver || 'human-approver', reason: b.reason || null, audit_events: [{ event_type: decision === 'approve' ? 'APPROVED' : 'REJECTED', actor: b.approver || 'human-approver', details: { reason: b.reason || null } }] } }];"
+      },
+      "id": "22beb9d1-ea80-4ba3-a780-d796e8a77c8c",
+      "name": "Validate Human Approval",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (SELECT $1::jsonb x), upd AS (\nUPDATE invoices SET approval_status=CASE WHEN p.x->>'approval_decision'='approve' THEN 'approved' ELSE 'rejected' END, status=CASE WHEN p.x->>'approval_decision'='approve' THEN 'approved_for_processing' ELSE 'rejected' END, updated_at=now() FROM p WHERE id=(p.x->>'invoice_id')::uuid RETURNING invoices.*\n), app AS (\nINSERT INTO approvals (invoice_id,decision,approver,reason,decided_at) SELECT (p.x->>'invoice_id')::uuid,p.x->>'approval_decision',p.x->>'approver',p.x->>'reason',now() FROM p\n) SELECT upd.id AS invoice_id, upd.invoice_number, p.x AS finance_payload FROM upd,p;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "id": "f6e3354c-dfb5-4002-b315-b74b781a1dd2",
+      "name": "Persist Human Approval",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3088,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {status:'approval_recorded',invoice_id:$json.invoice_id,invoice_number:$json.invoice_number,decision:$json.finance_payload.approval_decision} }}",
+        "options": {}
+      },
+      "id": "e269e515-0671-45d2-9aea-9c75dd62f403",
+      "name": "Return Approval Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3328,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mock/accounting/invoice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "90452dbf-43ec-43ba-a194-a984666673aa",
+      "name": "Mock Accounting API Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2608,
+        832
+      ],
+      "webhookId": "mock-accounting-invoice-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body || $json;\n\nreturn [\n  {\n    json: {\n      accounting_transaction_id: `ACC-${b.invoice_id || 'UNKNOWN'}-${Date.now()}`,\n      status: 'posted',\n      posted_at: new Date().toISOString(),\n      idempotency_key: b.idempotency_key || null\n    }\n  }\n];"
+      },
+      "id": "468591d1-b8dd-4ebc-8769-fd14ff5a96c7",
+      "name": "Simulate Accounting Posting",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "346cfafb-113b-4fc3-b61d-3bd55efd9d08",
+      "name": "Return Mock Accounting Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3088,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE EXTENSION IF NOT EXISTS pgcrypto;\nCREATE TABLE IF NOT EXISTS vendors (vendor_id uuid PRIMARY KEY DEFAULT gen_random_uuid(), vendor_name text NOT NULL, tax_id text UNIQUE, email text, bank_account text, status text NOT NULL DEFAULT 'active', approval_limit numeric(14,2) DEFAULT 50000, created_at timestamptz DEFAULT now());\nCREATE TABLE IF NOT EXISTS invoices (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), invoice_number text NOT NULL, vendor_id uuid REFERENCES vendors(vendor_id), invoice_date date, due_date date, currency varchar(3), subtotal numeric(14,2), tax numeric(14,2), total numeric(14,2), purchase_order_number text, status text NOT NULL DEFAULT 'received', validation_status text, approval_status text, payment_status text NOT NULL DEFAULT 'pending', duplicate_flag boolean NOT NULL DEFAULT false, document_hash text UNIQUE, confidence numeric(5,4), raw_extraction jsonb, created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now());\nCREATE UNIQUE INDEX IF NOT EXISTS invoices_vendor_number_unique ON invoices(vendor_id, invoice_number) WHERE vendor_id IS NOT NULL;\nCREATE TABLE IF NOT EXISTS invoice_line_items (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), invoice_id uuid NOT NULL REFERENCES invoices(id) ON DELETE CASCADE, description text, quantity numeric(14,3), unit_price numeric(14,2), line_total numeric(14,2));\nCREATE TABLE IF NOT EXISTS approvals (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), invoice_id uuid NOT NULL REFERENCES invoices(id), decision text NOT NULL CHECK(decision IN ('approve','reject')), approver text NOT NULL, reason text, decided_at timestamptz DEFAULT now());\nCREATE TABLE IF NOT EXISTS payments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), invoice_id uuid NOT NULL UNIQUE REFERENCES invoices(id), status text NOT NULL CHECK(status IN ('pending','approved','scheduled','paid','failed')), accounting_transaction_id text, created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now());\nCREATE TABLE IF NOT EXISTS audit_logs (id bigserial PRIMARY KEY, invoice_id uuid REFERENCES invoices(id), event_type text NOT NULL, actor text NOT NULL, details jsonb NOT NULL DEFAULT '{}'::jsonb, timestamp timestamptz NOT NULL DEFAULT now());",
+        "options": {}
+      },
+      "id": "31584f29-d2e4-495d-9238-952eeb6e4e3b",
+      "name": "Initialize Finance PostgreSQL Schema",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO vendors (vendor_name,tax_id,email,bank_account,status,approval_limit) VALUES\n('Karachi Office Supplies','PK-NTN-1234567','billing@karachioffice.example','PK00DEMO0000000012345678','active',50000),\n('Lahore Technology Services','PK-NTN-7654321','accounts@lahoretech.example','PK00DEMO0000000098765432','active',250000)\nON CONFLICT (tax_id) DO UPDATE SET vendor_name=EXCLUDED.vendor_name,status=EXCLUDED.status,approval_limit=EXCLUDED.approval_limit;\nSELECT 'Finance schema initialized and demo vendors seeded' AS result;",
+        "options": {}
+      },
+      "id": "6aa0f7f8-48f3-4d51-8f36-53ec2f12a554",
+      "name": "Seed Test Vendors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        736
+      ]
+    }
+  ],
+  "connections": {
+    "Invoice Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize and Validate File Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Demo Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create Demo Finance Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Demo Finance Document": {
+      "main": [
+        [
+          {
+            "node": "Normalize and Validate File Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize and Validate File Input": {
+      "main": [
+        [
+          {
+            "node": "Supported Finance Document?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supported Finance Document?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Controlled AI Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Write Immutable Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Controlled AI Extraction": {
+      "main": [
+        [
+          {
+            "node": "Local AI Invoice Extraction (Ollama)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local AI Invoice Extraction (Ollama)": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Extraction with Safe Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Extraction with Safe Fallback": {
+      "main": [
+        [
+          {
+            "node": "Controlled Tool - Lookup Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Controlled Tool - Lookup Vendor": {
+      "main": [
+        [
+          {
+            "node": "Restore Vendor Lookup Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Vendor Lookup Context": {
+      "main": [
+        [
+          {
+            "node": "Controlled Tool - Find Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Controlled Tool - Find Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Deterministic Validation and Approval Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Validation and Approval Rules": {
+      "main": [
+        [
+          {
+            "node": "Persist Invoice Idempotently",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligible for Auto Processing?": {
+      "main": [
+        [
+          {
+            "node": "Post to Local Mock Accounting API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Write Immutable Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist Invoice Idempotently": {
+      "main": [
+        [
+          {
+            "node": "Attach Persisted Invoice ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Persisted Invoice ID": {
+      "main": [
+        [
+          {
+            "node": "Eligible for Auto Processing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Local Mock Accounting API": {
+      "main": [
+        [
+          {
+            "node": "Handle Accounting Result Safely",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Accounting Result Safely": {
+      "main": [
+        [
+          {
+            "node": "Update Payment and Invoice Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Payment and Invoice Status": {
+      "main": [
+        [
+          {
+            "node": "Write Immutable Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Immutable Audit Log": {
+      "main": [
+        [
+          {
+            "node": "Return Invoice Processing Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Human Approval": {
+      "main": [
+        [
+          {
+            "node": "Persist Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist Human Approval": {
+      "main": [
+        [
+          {
+            "node": "Return Approval Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Accounting API Webhook": {
+      "main": [
+        [
+          {
+            "node": "Simulate Accounting Posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Accounting Posting": {
+      "main": [
+        [
+          {
+            "node": "Return Mock Accounting Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Finance PostgreSQL Schema": {
+      "main": [
+        [
+          {
+            "node": "Seed Test Vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "8d174d7c436bda5f01375faab0956febc7ee04eb8adbd00965722c3e194aee27"
+  }
+}
