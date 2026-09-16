@@ -1,0 +1,12 @@
+{
+  "invoice_number": "INV-DUP-001",
+  "invoice_date": "2026-09-01",
+  "vendor_name": "Karachi Office Supplies",
+  "vendor_tax_id": "PK-NTN-DEMO-1234567",
+  "currency": "PKR",
+  "subtotal": 10000,
+  "tax": 1800,
+  "total": 11800,
+  "confidence": 0.95,
+  "expected_result": "duplicate_invoice"
+}
