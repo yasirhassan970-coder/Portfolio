@@ -1,0 +1,8 @@
+{
+  "customer_id": "demo_001",
+  "intent": "FAQ",
+  "confidence": "High",
+  "resolution_status": "Resolved",
+  "requires_human_review": false,
+  "response": "The password reset link expires after 30 minutes."
+}
