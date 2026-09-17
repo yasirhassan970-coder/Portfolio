@@ -1,0 +1,792 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-support-query",
+        "options": {}
+      },
+      "id": "061fc384-3ce0-4470-b3c6-677c7e581bf4",
+      "name": "Webhook - Customer Query",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        416
+      ],
+      "webhookId": "a1b2c3d4-e5f6-4a1b-9c2d-000000000001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst EMAIL_RE = /[\\w.+-]+@[\\w-]+\\.[\\w.-]+/g;\nconst PHONE_RE = /(\\+?\\d{1,3}[-.\\s]?)?\\(?\\d{2,4}\\)?[-.\\s]?\\d{3,4}[-.\\s]?\\d{3,4}/g;\nconst CARD_RE = /\\b(?:\\d[ -]*?){13,16}\\b/g;\n\nreturn items.map((item) => {\n  const original = item.json.message || '';\n  let masked = original\n    .replace(EMAIL_RE, '[EMAIL_REDACTED]')\n    .replace(CARD_RE, '[CARD_REDACTED]')\n    .replace(PHONE_RE, '[PHONE_REDACTED]');\n\n  return {\n    json: {\n      ...item.json,\n      sanitizedMessage: masked,\n      piiMasked: masked !== original,\n      receivedAt: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "id": "76729c52-37e9-4265-bcfe-622388f0d68b",
+      "name": "Sanitize PII (Code)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intent classification engine for a customer support system.\nClassify the customer message into exactly ONE category: FAQ, Account, or Complaint.\n- FAQ: general product, feature, or policy questions answerable from a knowledge base.\n- Account: order status, billing, account details, or profile-specific requests requiring CRM lookup.\n- Complaint: dissatisfaction, refund disputes, or requests that require human escalation.\n\nCustomer message:\n{{$json.sanitizedMessage}}",
+        "hasOutputParser": true
+      },
+      "id": "56aa257f-39ab-41af-aa28-b56411072c2e",
+      "name": "Intent Classifier",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "67e76c9c-23fd-4fa5-be93-d14396cc012a",
+      "name": "Intent Classifier Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": { \"type\": \"string\", \"enum\": [\"FAQ\", \"Account\", \"Complaint\"] },\n    \"reasoning\": { \"type\": \"string\" }\n  },\n  \"required\": [\"category\"]\n}"
+      },
+      "id": "166f99f5-0394-4a0a-a9d6-f366ddc4e00f",
+      "name": "Intent Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "cond-faq",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "FAQ",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "FAQ"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "cond-account",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Account",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Account"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "cond-complaint",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Complaint"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 2
+        }
+      },
+      "id": "b235e23a-ce4d-4e2d-a693-64918e3a5686",
+      "name": "Intent Router (Switch)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        160,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "support_kb_articles",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "6e2e0fb1-32ee-4f23-97fe-57985102851c",
+      "name": "Qdrant KB Similarity Search",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        160
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "retrievedContext",
+              "type": "string",
+              "value": "No relevant knowledge base articles were found for this query. Provide a best-effort general answer and clearly note that confidence should be treated as Low."
+            },
+            {
+              "id": "a2",
+              "name": "kbFallbackTriggered",
+              "type": "boolean",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c879baeb-8f9e-48bc-a957-1ab12a439259",
+      "name": "No KB Results - Fallback",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using the retrieved knowledge base context below, answer the customer's question factually and concisely. If the context does not contain the answer, say so explicitly rather than guessing.\n\nContext:\n{{$json.retrievedContext || $json.text || 'No context retrieved.'}}\n\nCustomer question:\n{{$json.sanitizedMessage}}",
+        "options": {
+          "systemMessage": "You are a factual, policy-compliant customer support assistant. Never fabricate information that is not present in the provided context."
+        }
+      },
+      "id": "16a0e173-5052-42ed-b894-fd9927c223cd",
+      "name": "FAQ RAG Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "e6306c27-66f8-4c11-bb2a-b865e2596d16",
+      "name": "FAQ Agent Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        640,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://mock-crm.internal.example.com/api/v1/accounts/{{$json.customer_id}}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "40ad53c4-8198-4b7c-a555-8690908cd5f3",
+      "name": "Mock CRM Lookup (HTTP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using the account/order data retrieved from the CRM below, generate a helpful and accurate resolution for the customer's request. Only reference data explicitly present in the record.\n\nCRM data:\n{{JSON.stringify($json)}}\n\nCustomer request:\n{{$json.sanitizedMessage}}",
+        "options": {
+          "systemMessage": "You are an account resolution specialist. Never invent account, order, or billing details that are not present in the supplied CRM data."
+        }
+      },
+      "id": "9646623a-bb56-4bc2-8935-e098954727a0",
+      "name": "Account Resolution Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        640,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "59b0dacd-2c35-4c02-9152-8eda9f5c9168",
+      "name": "Account Agent Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        640,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "output",
+              "type": "string",
+              "value": "Complaint intent detected. Bypassing AI generation and routing directly to a human agent for resolution."
+            },
+            {
+              "id": "b2",
+              "name": "resolution_status",
+              "type": "string",
+              "value": "Escalated - Complaint"
+            },
+            {
+              "id": "b3",
+              "name": "requiresHumanReview",
+              "type": "boolean",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0aa66935-8edc-40f5-8bcf-61c0c42c2242",
+      "name": "Flag Complaint - Skip AI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate the following AI-generated customer support response for factual accuracy, hallucination risk, and policy alignment.\n\nCustomer query:\n{{$json.sanitizedMessage}}\n\nAI response:\n{{$json.output}}\n\nScore the response as High or Low confidence for auto-sending to the customer.",
+        "hasOutputParser": true
+      },
+      "id": "0b67e7d9-7ea6-46df-8822-5e934076dbce",
+      "name": "Confidence Evaluator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "181f45f7-03dc-471d-92e1-254da20d1bf7",
+      "name": "Confidence Evaluator Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        912,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"confidence\": { \"type\": \"string\", \"enum\": [\"High\", \"Low\"] },\n    \"hallucination_detected\": { \"type\": \"boolean\" },\n    \"notes\": { \"type\": \"string\" }\n  },\n  \"required\": [\"confidence\"]\n}"
+      },
+      "id": "2f3d5f4b-1ae9-4b8f-89b6-57be1ee89030",
+      "name": "Confidence Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "cond-high",
+                    "leftValue": "={{ $json.output.confidence }}",
+                    "rightValue": "High",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "High"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "cond-low",
+                    "leftValue": "={{ $json.output.confidence }}",
+                    "rightValue": "Low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Low"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 1
+        }
+      },
+      "id": "2f37e871-1558-4b7b-a0d0-2f105d056a93",
+      "name": "Confidence Router (Switch)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1152,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://botpress.internal.example.com/api/v1/webhook/{{$json.customer_id}}/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"customer_id\": $json.customer_id, \"response\": $json.output, \"resolution_status\": \"Resolved - High Confidence\" } }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "21db3d5f-3443-4ea8-a3c7-d463b6610ea9",
+      "name": "Send Response to Botpress",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1392,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "support-escalations",
+          "mode": "name"
+        },
+        "text": "=:warning: Human review required.\nCustomer: {{$json.customer_id}}\nIntent: {{$json.output?.category || 'Complaint'}}\nConfidence: {{$json.output?.confidence || 'N/A'}}\nMessage: {{$json.sanitizedMessage}}",
+        "otherOptions": {}
+      },
+      "id": "c0b802cc-de3e-4e3c-9ddb-b51570c80c39",
+      "name": "Alert Human Agent (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        480
+      ],
+      "webhookId": "304f971c-bafe-4ece-98f3-f7f04bad1632"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "support_audit_log",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{$json.customer_id}}",
+            "intent": "={{$json.output?.category || 'Complaint'}}",
+            "confidence_score": "={{$json.output?.confidence || 'N/A'}}",
+            "resolution_status": "={{$json.resolution_status || 'Resolved'}}",
+            "ai_response": "={{ typeof $json.output === 'string' ? $json.output : JSON.stringify($json.output) }}",
+            "created_at": "={{$now.toISO()}}"
+          }
+        },
+        "options": {}
+      },
+      "id": "57756eb4-2134-4376-ace2-5aee006a9133",
+      "name": "Log Interaction to Audit DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1648,
+        336
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Customer Query": {
+      "main": [
+        [
+          {
+            "node": "Sanitize PII (Code)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize PII (Code)": {
+      "main": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier": {
+      "main": [
+        [
+          {
+            "node": "Intent Router (Switch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Router (Switch)": {
+      "main": [
+        [
+          {
+            "node": "Qdrant KB Similarity Search",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock CRM Lookup (HTTP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flag Complaint - Skip AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant KB Similarity Search": {
+      "main": [
+        [
+          {
+            "node": "FAQ RAG Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No KB Results - Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No KB Results - Fallback": {
+      "main": [
+        [
+          {
+            "node": "FAQ RAG Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ RAG Agent": {
+      "main": [
+        [
+          {
+            "node": "Confidence Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ Agent Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "FAQ RAG Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock CRM Lookup (HTTP)": {
+      "main": [
+        [
+          {
+            "node": "Account Resolution Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Account Resolution Agent": {
+      "main": [
+        [
+          {
+            "node": "Confidence Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Account Agent Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Account Resolution Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flag Complaint - Skip AI": {
+      "main": [
+        [
+          {
+            "node": "Alert Human Agent (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Evaluator": {
+      "main": [
+        [
+          {
+            "node": "Confidence Router (Switch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Evaluator Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Confidence Evaluator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Confidence Evaluator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Router (Switch)": {
+      "main": [
+        [
+          {
+            "node": "Send Response to Botpress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Human Agent (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Response to Botpress": {
+      "main": [
+        [
+          {
+            "node": "Log Interaction to Audit DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Human Agent (Slack)": {
+      "main": [
+        [
+          {
+            "node": "Log Interaction to Audit DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "8d174d7c436bda5f01375faab0956febc7ee04eb8adbd00965722c3e194aee27"
+  }
+}
