@@ -130,14 +130,6 @@ Then I understand the workflow, identify repetitive tasks, decide where AI actua
 
 ---
 
-## 📊 GitHub Stats
-
-![Yasir's GitHub stats](https://github-readme-stats.vercel.app/api?username=yasirhassan970-coder\&show_icons=true\&theme=tokyonight\&hide_border=true)
-
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=yasirhassan970-coder\&layout=compact\&theme=tokyonight\&hide_border=true)
-
----
-
 ## 🤝 Let's Connect
 
 📧 **Email:** [yasirhassan4113@gmail.com](mailto:yasirhassan4113@gmail.com)
