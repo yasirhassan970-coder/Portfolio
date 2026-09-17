@@ -1,6 +1,10 @@
 # AI Meeting Memory and Task Tracking System
-![AI Meeting Memory Workflow](workflow(2).png)
+
 An AI-powered n8n workflow that turns completed meeting transcripts into structured summaries, action items, CRM updates, approval-based follow-ups, and task reminders.
+
+## Workflow Architecture
+
+![AI Meeting Memory Workflow](workflow%20%282%29.png)
 
 ## What It Does
 
