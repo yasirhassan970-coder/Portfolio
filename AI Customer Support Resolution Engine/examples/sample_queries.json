@@ -1,0 +1,18 @@
+[
+  {
+    "customer_id": "demo_001",
+    "message": "How long does the password reset link remain valid?"
+  },
+  {
+    "customer_id": "demo_002",
+    "message": "How long do I have to request a refund?"
+  },
+  {
+    "customer_id": "demo_003",
+    "message": "My account is locked. What should I do?"
+  },
+  {
+    "customer_id": "demo_004",
+    "message": "I want to complain about my order."
+  }
+]
