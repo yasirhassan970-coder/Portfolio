@@ -2,50 +2,61 @@
 
 ### AI Automation Developer | MBBS Student | AI Builder
 
-I build AI systems, automation workflows, and practical software solutions for real world problems.
+I build AI agents, automation workflows, chatbots, API integrations, and practical AI systems for real world business problems.
 
-I'm currently studying **MBBS** while developing skills in **AI automation, AI agents, chatbots, backend systems, APIs, and workflow automation**.
+I'm currently studying **MBBS** while building hands on experience in **AI automation, AI agents, n8n, LLM applications, backend systems, APIs, and workflow design**.
 
-My long term goal is to work at the intersection of **Healthcare × AI × Automation**.
+My long term focus is the intersection of:
+
+**Healthcare × AI × Automation**
 
 ---
 
-## 🧠 What I Do
+## 🧠 What I Build
 
-🤖 Build AI Agents
-💬 Build AI Chatbots
-⚙️ Design n8n Automation Workflows
-🔗 Integrate APIs and Business Tools
-🧩 Build Backend Systems
-🏥 Explore Healthcare AI
-📊 Automate Repetitive Business Processes
-🛠️ Turn ideas into working AI systems
+🤖 AI Agents
+💬 AI Chatbots
+⚙️ n8n Automation Workflows
+🔗 API and Business System Integrations
+🧩 Backend AI Systems
+📊 Business Process Automation
+🏥 Healthcare AI Systems
+🧠 RAG and Knowledge Based AI
+👥 Human in the Loop AI Workflows
+
+I focus on turning repetitive manual processes into practical AI powered workflows.
 
 ---
 
 ## 🚀 Featured Projects
 
-### 🤖 AI SDR Automation
+### 💰 AI Finance Operations Agent
 
-An AI powered sales development workflow that processes new leads, analyzes information, generates personalized responses, and automates parts of the sales process.
+An AI powered finance operations workflow designed to automate repetitive financial processes such as invoice handling, receipt processing, vendor information extraction, purchase order matching, payment workflows, and approval routing.
 
-**Tech:** n8n • AI APIs • Webhooks • REST APIs
+**Tech:** n8n • AI Agents • OCR • APIs • PostgreSQL
+
+📂 **[View Project](./AI%20Finance%20Operations%20Agent/)**
 
 ---
 
 ### 💬 AI Customer Support Resolution Engine
 
-An AI customer support system designed to understand customer issues, retrieve relevant information, generate responses, and send uncertain cases to human agents.
+An AI customer support workflow built with n8n that classifies customer requests, retrieves relevant knowledge from Qdrant, resolves account related requests through a mock CRM integration, escalates complaints, evaluates AI responses, and routes uncertain cases to human support.
 
-**Tech:** Next.js • FastAPI • PostgreSQL • pgvector • Ollama • Qdrant • n8n
+**Tech:** n8n • OpenAI • Qdrant • PostgreSQL • Slack • REST APIs
+
+📂 **[View Project](./AI%20Customer%20Support%20Resolution%20Engine/)**
 
 ---
 
-### 💰 AI Finance Operations Agent
+### 🧠 AI Meeting Memory
 
-An AI automation system designed to process invoices, receipts, vendor information, purchase orders, payment information, and approval workflows.
+An AI workflow designed to process meeting information and create structured memory that can be used for future retrieval, follow up, and knowledge organization.
 
-**Tech:** AI Agents • OCR • n8n • APIs • PostgreSQL
+**Tech:** n8n • LLMs • APIs • Workflow Automation
+
+📂 **[View Project](./AI%20Meeting%20Memory/)**
 
 ---
 
@@ -54,13 +65,13 @@ An AI automation system designed to process invoices, receipts, vendor informati
 ### Artificial Intelligence
 
 ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge\&logo=openai\&logoColor=white)
-![Google Gemini](https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge\&logo=google\&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge\&logo=google\&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-black?style=for-the-badge)
 
 ### Automation
 
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge\&logo=n8n\&logoColor=white)
-![REST API](https://img.shields.io/badge/REST_API-02569B?style=for-the-badge)
+![REST API](https://img.shields.io/badge/REST%20API-02569B?style=for-the-badge)
 
 ### Development
 
@@ -69,9 +80,10 @@ An AI automation system designed to process invoices, receipts, vendor informati
 ![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge\&logo=next.js\&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)
 
-### Databases & Infrastructure
+### Databases and Infrastructure
 
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge\&logo=postgresql\&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-FF4F64?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge\&logo=docker\&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge\&logo=git\&logoColor=white)
 
@@ -85,22 +97,20 @@ I'm interested in AI systems that can help healthcare professionals with:
 
 • Administrative work
 • Patient information organization
-• Routine questions
+• Routine information requests
 • Appointment workflows
 • Documentation
 • Patient engagement
 • Healthcare operations
 
-The goal is simple:
-
-**Use technology to reduce repetitive work and give healthcare professionals more time for patients.**
+The goal is to build systems that reduce repetitive work while keeping humans responsible for important decisions.
 
 ---
 
 ## 📚 Currently Learning
 
 • Advanced AI Agents
-• Retrieval Augmented Generation
+• Retrieval-Augmented Generation
 • LLM Application Development
 • AI Automation Architecture
 • Backend Development
@@ -114,7 +124,7 @@ The goal is simple:
 
 I start with the problem.
 
-Then I understand the workflow, identify repetitive tasks, decide where AI actually helps, and build the automation around it.
+Then I understand the workflow, identify repetitive tasks, decide where AI actually adds value, and build the automation around the real process.
 
 **Problem → Workflow → Automation → AI → Production**
 
@@ -142,4 +152,4 @@ https://github.com/yasirhassan970-coder
 
 ### Healthcare × AI × Automation
 
-**Building systems, learning medicine, and solving real problems.**
+**Building AI systems, learning medicine, and solving real problems.**
