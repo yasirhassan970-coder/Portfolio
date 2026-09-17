@@ -1,265 +1,377 @@
 # AI Customer Support Resolution Engine
 
-An AI powered customer support workflow that retrieves relevant information from a knowledge base, generates a grounded response, validates the result, and routes uncertain cases to human support.
+An AI powered customer support workflow built with n8n that classifies customer requests, retrieves relevant knowledge, resolves account related queries, escalates complaints, evaluates AI responses, and sends uncertain cases to human support.
+
+![AI Customer Support Resolution Engine Workflow](Workflow.png)
+
+## Overview
+
+Customer support teams handle a large number of repetitive questions and account related requests every day.
+
+This project demonstrates an automated support resolution pipeline that can:
+
+• Understand the customer's request
+• Classify the request by intent
+• Retrieve relevant information from a knowledge base
+• Generate grounded FAQ responses
+• Resolve account related requests using CRM data
+• Escalate complaints directly to human support
+• Evaluate AI generated responses before delivery
+• Log interactions for auditing and review
+
+The workflow is designed as a portfolio project demonstrating how AI agents, retrieval systems, workflow automation, human review, and business system integrations can work together.
 
 ## Problem
 
-Customer support teams often spend time answering repetitive questions, searching through internal documentation, and manually deciding which requests require human attention.
+Traditional customer support workflows often require agents to manually handle repetitive requests such as:
 
-A support system needs to do more than generate an answer. It should retrieve relevant information, use that information as context, detect uncertainty, and escalate cases when the AI should not answer automatically.
+• Frequently asked questions
+• Account related questions
+• Password and access issues
+• Billing and policy questions
+• Customer complaints
+• Requests that require escalation
+
+This can increase response time and consume support team resources.
+
+The goal of this project is to automate suitable requests while keeping human support involved when the AI should not respond automatically.
 
 ## Solution
 
-The AI Customer Support Resolution Engine combines knowledge retrieval, large language models, deterministic validation, and human escalation into one workflow.
+The workflow receives a customer query through a webhook and processes it through several stages.
 
-The system receives a customer request, searches the knowledge base for relevant information, generates a response using the retrieved context, evaluates the result, and either returns the response or routes the request for human review.
+Customer Query
+↓
+PII Sanitization
+↓
+Intent Classification
+↓
+Intent Routing
+↓
+FAQ Retrieval or Account Resolution
+↓
+AI Response Generation
+↓
+Confidence Evaluation
+↓
+Automatic Response or Human Review
+↓
+Audit Logging
+
+Complaints are routed directly to human support instead of being answered automatically by the AI.
 
 ## Architecture
 
-```text
-Customer Query
-       ↓
-Input Validation
-       ↓
-Query Processing
-       ↓
-Knowledge Retrieval
-       ↓
-Qdrant Vector Database
-       ↓
-Relevant Context
-       ↓
-AI Response Generation
-       ↓
-Response Validation
-       ↓
-Confidence Check
-       ↓
-   ┌───┴────┐
-   ↓        ↓
-High       Low
-Confidence Confidence
-   ↓        ↓
-Reply    Human Review
-            ↓
-       Support Ticket
-```
+![Workflow Architecture](Workflow.png)
 
-## Core Features
+### Main Components
 
-• Customer query processing
+**1. Customer Query Webhook**
 
-• Knowledge base retrieval
+Receives customer support requests through an n8n webhook.
 
-• Semantic search using vector embeddings
+Example endpoint:
 
-• Qdrant vector database integration
+`POST /customer-support-query`
 
-• AI response generation
+Expected information includes a customer identifier and customer message.
 
-• Context grounded responses
+**2. PII Sanitization**
 
-• Response validation
+The workflow processes the incoming message and masks detected personally identifiable information before sending the sanitized message to AI components.
 
-• Confidence based routing
+The workflow records whether PII was detected and masked.
 
-• Human escalation
+**3. Intent Classification**
 
-• Support ticket creation
+An OpenAI powered classifier categorizes each request into one of three supported intents:
 
-• Error handling
+• FAQ
+• Account
+• Complaint
 
-• Structured workflow execution
+The classifier uses structured output validation to keep the result within the supported categories.
 
-## Technology Stack
+**4. Intent Routing**
 
-| Technology      | Purpose                                |
-| --------------- | -------------------------------------- |
-| n8n             | Workflow orchestration                 |
-| Qdrant          | Vector database and semantic retrieval |
-| PostgreSQL      | Structured data storage                |
-| Ollama          | Local AI model execution               |
-| Embedding Model | Knowledge base vectorization           |
-| LLM             | Customer response generation           |
-| REST APIs       | External system integration            |
+The classified request is routed to the appropriate processing branch.
 
-## Workflow
+FAQ requests go to knowledge retrieval.
 
-### 1. Customer Query
+Account requests go to the CRM resolution flow.
 
-The workflow receives a customer support request through an API or webhook.
+Complaint requests go directly to human escalation.
 
-Example:
+**5. Knowledge Retrieval**
 
-```json
-{
-  "customer_id": "customer_001",
-  "message": "How can I reset my account password?",
-  "channel": "web"
-}
-```
+FAQ requests are processed through Qdrant vector search.
 
-### 2. Input Validation
+The workflow uses the `support_kb_articles` collection to retrieve relevant support information.
 
-The incoming request is checked for required fields and valid data before further processing.
+The retrieved context is passed to the FAQ agent so that the generated response can be grounded in available support documentation.
 
-### 3. Query Processing
+**6. FAQ RAG Agent**
 
-The customer message is prepared for semantic search and AI processing.
+The FAQ agent generates a response using the customer's sanitized message and retrieved knowledge.
 
-### 4. Knowledge Retrieval
+The agent is instructed not to fabricate information beyond the available context.
 
-The processed query is converted into an embedding and searched against the support knowledge base.
+The current implementation uses OpenAI `gpt 4o mini`.
 
-Qdrant returns the most relevant knowledge entries.
+**7. Account Resolution**
 
-### 5. Context Construction
+Account related requests are sent to a mock CRM endpoint.
 
-The retrieved information is converted into structured context for the AI model.
+The CRM response is provided to an account resolution agent together with the customer's sanitized request.
 
-The model should use the retrieved information rather than relying only on its internal knowledge.
+This demonstrates how an AI workflow could combine customer information from a business system with natural language reasoning.
 
-### 6. AI Response Generation
+The current CRM endpoint is a mock demonstration endpoint and is not connected to a real production CRM.
 
-The AI generates a customer response using the retrieved support information.
+**8. Complaint Escalation**
 
-The response should be concise, relevant, and grounded in the available knowledge.
+Complaint requests bypass the AI response generation stage.
 
-### 7. Response Validation
+The workflow marks the request for human review and sends an escalation notification to the support team through Slack.
 
-The generated response is checked before it is returned to the customer.
+**9. Confidence Evaluation**
 
-Validation can include:
+Responses generated by the FAQ and account resolution agents are evaluated by a separate AI confidence evaluator.
 
-• Required fields
+The evaluator checks factors such as:
 
-• Response structure
+• Factual accuracy
+• Hallucination risk
+• Policy alignment
 
-• Retrieved context availability
+The evaluator returns a categorical confidence result:
 
-• Unsupported claims
+• High
+• Low
 
-• Confidence threshold
+This is a qualitative AI evaluation, not a calibrated probability score.
 
-### 8. Human Escalation
+**10. Human Review**
 
-If the system cannot confidently answer the request, the workflow routes the case to human support instead of automatically providing an uncertain response.
+Low confidence responses are routed to human support through Slack.
+
+Complaint requests are also escalated directly.
+
+This creates a human in the loop mechanism instead of allowing every request to be answered automatically.
+
+**11. Audit Logging**
+
+Processed interactions are logged to PostgreSQL.
+
+The audit record can include:
+
+• Customer identifier
+• Intent
+• Confidence result
+• Resolution status
+• AI response
+• Creation timestamp
+
+This provides a foundation for monitoring and reviewing automated support interactions.
 
 ## Example Scenarios
 
-| Scenario                                    | Expected Route        |
-| ------------------------------------------- | --------------------- |
-| Knowledge base contains a clear answer      | Automated response    |
-| Relevant information is partially available | Additional validation |
-| No relevant knowledge found                 | Human review          |
-| Low confidence response                     | Human review          |
-| Invalid customer request                    | Validation error      |
-| System or API failure                       | Error handling        |
+### FAQ Request
+
+Customer:
+
+`How long does the password reset link remain valid?`
+
+Expected flow:
+
+Customer Query
+↓
+PII Sanitization
+↓
+FAQ Classification
+↓
+Qdrant Knowledge Retrieval
+↓
+FAQ RAG Agent
+↓
+Confidence Evaluation
+↓
+Response or Human Review
+
+Example response:
+
+`The password reset link expires after 30 minutes.`
+
+### Account Request
+
+Customer:
+
+`My account is locked. What should I do?`
+
+Expected flow:
+
+Customer Query
+↓
+PII Sanitization
+↓
+Account Classification
+↓
+CRM Lookup
+↓
+Account Resolution Agent
+↓
+Confidence Evaluation
+↓
+Response or Human Review
+
+### Complaint
+
+Customer:
+
+`I want to complain about my order.`
+
+Expected flow:
+
+Customer Query
+↓
+PII Sanitization
+↓
+Complaint Classification
+↓
+Human Escalation
+↓
+Slack Notification
+↓
+Audit Logging
+
+The workflow intentionally avoids generating an automated AI response for complaints.
 
 ## Knowledge Base
 
-The knowledge base can contain information such as:
+The main resolution workflow uses Qdrant for semantic knowledge retrieval.
 
-• Product documentation
+The current demonstration knowledge base contains support articles covering example topics such as:
 
-• Frequently asked questions
+• Password reset
+• Refund policy
+• Locked accounts
+• Shipping policy
 
-• Support policies
+The Qdrant collection expected by the workflow is:
 
-• Troubleshooting guides
+`support_kb_articles`
 
-• Account procedures
+Knowledge base ingestion is maintained separately from the main resolution workflow and is not included as a GitHub workflow artifact in this project version.
 
-• Refund policies
+## Technology Stack
 
-• Service information
-
-The knowledge base is converted into embeddings and stored in Qdrant for semantic retrieval.
+| Technology         | Purpose                                                           |
+| ------------------ | ----------------------------------------------------------------- |
+| n8n                | Workflow automation                                               |
+| OpenAI GPT 4o mini | Intent classification, response generation, confidence evaluation |
+| Qdrant             | Vector search and knowledge retrieval                             |
+| PostgreSQL         | Audit logging                                                     |
+| Slack              | Human escalation                                                  |
+| HTTP APIs          | CRM and support system integration                                |
+| LangChain nodes    | AI workflow orchestration and structured processing               |
 
 ## Human In The Loop
 
-The system is designed so that AI does not have to answer every request automatically.
+Human review is an important part of the architecture.
 
-Cases can be routed to human support when:
+The workflow does not assume that every AI generated response should be sent directly to the customer.
 
-• Relevant knowledge cannot be found
+Human escalation occurs when:
 
-• The generated response does not meet validation requirements
+• The customer submits a complaint
+• The AI confidence evaluation returns Low
+• A response requires additional support team review
 
-• Confidence is below the configured threshold
+This approach provides a controlled automation model where AI handles suitable requests while humans remain responsible for uncertain or sensitive cases.
 
-• The request requires human judgment
+## Security Considerations
 
-• An external system fails
+This project is a demonstration system and should not be treated as production ready.
 
-## Security
+Important production considerations include:
 
-This project is designed as a portfolio demonstration.
-
-No production credentials, API keys, passwords, or private customer information should be stored in the repository.
-
-Production deployment would require additional controls including:
-
-• Authentication
-
-• Authorization
-
-• Secret management
-
+• Secure webhook authentication
+• API authentication and authorization
+• Proper secret management
+• Stronger PII detection and protection
 • Input validation
-
 • Rate limiting
+• API timeout and retry handling
+• Structured error handling
+• Database access controls
+• Audit log protection
+• Monitoring and alerting
+• Human review policies
+• Production CRM and support system authentication
 
-• Logging
+The `.env.example` file contains variable names only and does not contain real credentials.
 
-• Access controls
+## Current Limitations
 
-• Data retention policies
+The current portfolio implementation has several intentional limitations.
 
-• Monitoring
+• The CRM integration uses a mock endpoint
+• The Botpress response endpoint is a mock endpoint
+• The knowledge base contains demonstration content
+• The supported intent categories are limited to FAQ, Account, and Complaint
+• Confidence evaluation is qualitative rather than statistically calibrated
+• PII masking uses pattern based detection and is not a complete privacy solution
+• Production authentication and security controls are not fully implemented
+• Automated knowledge base ingestion is maintained separately and is not included in the GitHub workflow artifact
+• Error handling and retry policies require further production hardening
 
-## Limitations
-
-This repository demonstrates the architecture and workflow logic rather than a production customer support platform.
-
-Production deployment would require additional testing, security controls, monitoring, authentication, knowledge base management, and integration with the client's existing support infrastructure.
-
-AI generated responses should not be treated as guaranteed factual answers. The retrieval and validation layers are intended to reduce unsupported responses, while human escalation provides an additional safety mechanism.
+These limitations are documented intentionally so the project accurately represents the current implementation.
 
 ## Project Status
 
-Portfolio project in development.
+**Status: Portfolio project**
 
-The workflow, knowledge ingestion pipeline, retrieval system, validation logic, and human escalation components will be developed incrementally.
+The main customer support resolution workflow is implemented in n8n and documented with its workflow JSON, architecture image, configuration template, and example inputs and outputs.
+
+The project demonstrates the core automation and AI architecture while identifying the additional work required for production deployment.
 
 ## Planned Improvements
 
-• Knowledge base ingestion pipeline
+Future improvements may include:
 
-• Automated document chunking
-
-• Embedding generation
-
-• Qdrant collection management
-
-• Improved retrieval ranking
-
-• Response evaluation
-
-• Conversation history
-
-• Support ticket integration
-
-• Analytics dashboard
-
-• Production authentication
-
-• Monitoring and logging
+• Automated knowledge base ingestion
+• Improved document chunking
+• Dedicated embedding generation
+• Better retrieval evaluation
+• More detailed intent classification
+• Production CRM integration
+• Production support platform integration
+• Stronger authentication
+• Retry and error handling
+• Monitoring and observability
+• Evaluation datasets and automated testing
+• Calibrated confidence scoring
+• Human review dashboard
+• Expanded audit and analytics capabilities
 
 ## My Role
 
-Designed and implemented the workflow architecture, AI processing layer, knowledge retrieval system, validation logic, human escalation flow, and integration structure.
+I designed and built the workflow architecture, AI routing logic, retrieval flow, response evaluation process, human escalation logic, and audit logging structure.
+
+The project demonstrates practical experience with:
+
+• AI agents
+• LLM workflows
+• RAG systems
+• n8n automation
+• API integrations
+• Vector databases
+• Human in the loop systems
+• Structured AI outputs
+• Workflow based decision making
+• AI response evaluation
 
 ## License
 
-This project is available for educational and portfolio demonstration purposes.
+This project is available under the license included in this repository.
+
